@@ -93,4 +93,74 @@ class BusinessTripsController: UITableViewController {
         }
         return (false, nil)
     }
+    
+    func getCellDescriptorForIndexPath(indexPath: NSIndexPath) -> String {
+        if indexPath.row == 0 && self.businessTripsRepository[String(indexPath.section)].count != 1 {
+            return "businessTripCell"
+        }
+        else {
+            return "serviceInBusinessTripCell"
+        }
+    }
+    
+    func constructNameForSectionHeadRow(indexPath: NSIndexPath) -> String {
+        let numberToString = self.businessTripsRepository[String(indexPath.section)]["1"]["main"]["order"].stringValue
+        let countOfServices = String(self.businessTripsRepository[String(indexPath.section)].count - 1)
+        return "Командировка №" + numberToString + " (всего услуг: " + countOfServices + ")"
+    }
+    
+    func constructNameForRowWithService(indexPath: NSIndexPath) -> String {
+        let numberToString = self.businessTripsRepository[String(indexPath.section)][String(indexPath.row)]["main"]["id"].stringValue
+        let type = self.businessTripsRepository[String(indexPath.section)][String(indexPath.row)]["type"].stringValue
+        let createdAt = self.businessTripsRepository[String(indexPath.section)][String(indexPath.row)]["main"]["date"].stringValue
+        return "   №" + numberToString + " (" + type + ")" + ", " + createdAt
+    }
+    
+    /**
+     *  SECTION OF METHODS: - UITableView methods
+     */
+    
+    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+        if self.businessTripsRepository != nil {
+            return self.businessTripsRepository.count
+        }
+        else {
+            return 0
+        }
+    }
+    
+    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if self.businessTripsSectionsState[section] == true { return self.businessTripsRepository[String(section)].count }
+        else { return 1 }
+    }
+    
+    override func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+        return 50
+    }
+    
+    override func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return nil
+    }
+    
+    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        let currentCellDescriptor = getCellDescriptorForIndexPath(indexPath)
+        let cell = self.tableView.dequeueReusableCellWithIdentifier(currentCellDescriptor, forIndexPath: indexPath) as! BusinessTripsCell
+        
+        cell.textLabel!.text = currentCellDescriptor == "businessTripCell" ? constructNameForSectionHeadRow(indexPath) : constructNameForRowWithService(indexPath)
+        
+        //cell.backgroundColor = indexPath.row % 2 == 0 ? UIColor(red: 0.9, green: 0.9, blue: 0.9, alpha: 1.0) : UIColor.whiteColor()
+        
+        return cell
+    }
+    
+    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        let stateOfRowsBeforeTapping: Bool = self.businessTripsSectionsState[indexPath.section]!
+        self.businessTripsSectionsState[indexPath.section] = !stateOfRowsBeforeTapping
+        
+        if !(indexPath.row == 0 && self.businessTripsRepository[String(indexPath.section)].count != 1) {
+            self.performSegueWithIdentifier("segueToServiceDetails", sender: self)
+        }
+        
+        self.tableView.reloadSections(NSIndexSet(index: indexPath.section), withRowAnimation: UITableViewRowAnimation.Fade)
+    }
 }
